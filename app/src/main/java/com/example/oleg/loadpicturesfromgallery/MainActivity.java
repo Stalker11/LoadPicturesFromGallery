@@ -1,9 +1,14 @@
 package com.example.oleg.loadpicturesfromgallery;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -29,11 +34,13 @@ private static final String TAG = MainActivity.class.getSimpleName();
     private Unbinder unbinder;
     private static final int SELECT_PICTURE_ONE = 100;
     private static final int SELECT_PICTURE_TWO = 1000;
+    private static final int REQUEST_PERMISSION = 500;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         unbinder = ButterKnife.bind(this);
+        requestPermission();
         Log.d(TAG, "onCreate: "+1);
     }
     @OnClick({R.id.first_image, R.id.second_image})
@@ -85,6 +92,23 @@ private static final String TAG = MainActivity.class.getSimpleName();
             Log.d(TAG, "Image Path : " + path);
             // Set the image in ImageView
             image.setImageURI(selectedImageUri);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        Log.d(TAG, "onRequestPermissionsResult: "+permissions[0]+" "+grantResults[0]);
+
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+    private void requestPermission(){
+        if (Build.VERSION.SDK_INT > 22) {
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}
+                        , REQUEST_PERMISSION);
+            }
         }
     }
 }
