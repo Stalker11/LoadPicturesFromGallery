@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
@@ -15,6 +16,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.MediaController;
+import android.widget.VideoView;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -31,9 +34,12 @@ private static final String TAG = MainActivity.class.getSimpleName();
     ImageView firstImage;
     @BindView(R.id.image_two)
     ImageView secondImage;
+    @BindView(R.id.video_view)
+    VideoView videoView;
     private Unbinder unbinder;
     private static final int SELECT_PICTURE_ONE = 100;
     private static final int SELECT_PICTURE_TWO = 1000;
+    private static final int SELECT_VIDEO = 200;
     private static final int REQUEST_PERMISSION = 500;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +49,7 @@ private static final String TAG = MainActivity.class.getSimpleName();
         requestPermission();
         Log.d(TAG, "onCreate: "+1);
     }
-    @OnClick({R.id.first_image, R.id.second_image})
+    @OnClick({R.id.first_image, R.id.second_image, R.id.choose_video})
     public void loadImage(View v){
         Intent intent = new Intent();
         intent.setType("image/*");
@@ -54,6 +60,10 @@ private static final String TAG = MainActivity.class.getSimpleName();
                 break;
             case R.id.second_image:
                 startActivityForResult(Intent.createChooser(intent, "Select Picture"), SELECT_PICTURE_TWO);
+                break;
+            case R.id.choose_video:
+                Intent intent1 = new Intent(Intent.ACTION_PICK,MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(intent1,SELECT_VIDEO);
         }
 
     }
@@ -65,6 +75,22 @@ private static final String TAG = MainActivity.class.getSimpleName();
                 selectImageContainer(data, secondImage);
             }else if(requestCode == SELECT_PICTURE_ONE){
                 selectImageContainer(data,firstImage);
+            } else if(requestCode == SELECT_VIDEO){
+                Log.d(TAG, "onActivityResult: "+data.getData().toString());
+                selectImageContainer(data,firstImage);
+                MediaController mc = new MediaController(this);
+                mc.setAnchorView(videoView);
+                mc.setMediaPlayer(videoView);
+                videoView.setMediaController(mc);
+                videoView.setVideoURI(data.getData());
+                videoView.requestFocus();
+
+                videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                    @Override
+                    public void onPrepared(MediaPlayer mp) {
+                        videoView.start();
+                    }
+                });
             }
         }
     }
